@@ -1,7 +1,5 @@
 require_relative "graph.rb"
 
-# PUT COMMENT FOR SYNSETS CLASS HERE
-
 class Synsets
 
 # initialize() is the constructor for the Synets class
@@ -17,7 +15,7 @@ class Synsets
 
     def load(synsets_file)
 
-	temp_array = Array.new
+	temp_hash = Hash.new
 	invalid_lines = Array.new	
 	load_failed = false;
 	count = 1
@@ -25,27 +23,36 @@ class Synsets
 	File.readlines(synsets_file).each do |line|
 		parsed_line = line.scan(/^id: (\d+) synset: (\S+)$/)
 
-		if (parsed_line.empty?)
+		if parsed_line.empty?
 			invalid_lines.push count
 			load_failed = true
 		else
-			temp_array.push parsed_line
+			id = parsed_line[0][0].to_i
+			synset = parsed_line[0][1].split(",")
+			
+			if temp_hash.has_key? id
+				invalid_lines.push count
+				load_failed = true
+			else
+				temp_hash[id] = synset
+			end
 		end
 		count = count + 1
 	end
 
-	if (load_failed)
+	if load_failed
+		print invalid_lines
+		print "\n"
 		return invalid_lines
 	else
-		# pull ids and synsets from the array of parsed lines
-		# add those to the hashmap, then return nil
-		temp_array.each do |line|
-			id = line[0][0].to_i
-			synset = line[0][1].split(",")
-			@hash[id] = synset
+		# add ids and synsets to the hashmap, return nil
+		temp_hash.each do |key, value|
+			addSet(key, value)
 		end
+		print @hash
+		print "\n"
+		return nil
 	end
-	puts @hash
     end 
 
 # addSet() adds a synset id and corresponding array of nouns to a hash
@@ -65,72 +72,255 @@ class Synsets
 # returns array, returns an empty array if the synset_id was not found
 
     def lookup(synset_id)
-        arr = Array.new
+	arr = Array.new
 
-	if (@hash.has_key? synset_id)
+	if @hash.has_key? synset_id
 		return @hash[synset_id]
 	else
 		return arr
 	end
     end
 
-# findSynsets() does...
-# blah blah blah
+# findSynsets() returns either an array of synset ids (for a string) or
+# a hash of nouns and corresponding arrays of ids (for an array)
 
     def findSynsets(to_find)
-        
-	if (to_find.class == String)
-		# iterate through the hash and find every synset 
-		# that contains the noun "to_find," return an array of ids
+        result_hash = Hash.new
 
-	else if (to_find.class == Array)
-		# call findSynsets() on every noun in the received array
-		# and find some way of storing the results in a hash
-	end	
+	if (to_find.class == String)
+		return findSynset_helper(to_find)
+	elsif (to_find.class == Array)
+		to_find.each do |x|
+			result_hash[x] = findSynset_helper(x)
+		end
+		return result_hash	
+	else
+		return nil
+	end
     end
+
+# findSynset_helper() searches through the @hash and finds all the 
+# ids that correspond to synsets containing that noun, returns an array
+	
+    def findSynset_helper(to_find)
+	array_ids = Array.new
+
+	@hash.keys.each do |key|
+		if @hash[key].include? to_find
+			array_ids.push key
+		end
+	end
+	return array_ids
+    end
+
 end
 
-# PUT COMMENT FOR HYPERNYMS CLASS HERE
 
 class Hypernyms
+
+# initialize() is the constructor for the Hypernyms class
+# it creates a graph for synset ids and their relationships
+
     def initialize
-	# create an instance of the graiph
+	# create an instance of the graph
 	@graph = Graph.new
     end
 
+# load() loads edges between synset ids into a graph and loads the ids
+# into graph if they don't exist, returns nil or an array of invalid lines
+
     def load(hypernyms_file)
-        raise Exception, "Not implemented"
+	
+	temp_hash = Hash.new
+	invalid_lines = Array.new
+	load_failed = false
+	count = 1
+
+	File.readlines(hypernyms_file).each do |line|
+		hyp_line = line.scan(/^from: (\d+) to: (\S+)$/)
+
+		if hyp_line.empty?
+			invalid_lines.push count
+			load_failed = true
+		else
+			from = hyp_line[0][0].to_i
+			to = hyp_line[0][1].split(",")
+			to_array = to.collect{|x| x.to_i}
+			
+			if to_array.include? from
+				invalid_lines.push count
+				load_failed = true
+			else	
+				temp_hash[from] = to_array
+			end
+		end
+		count = count + 1
+	end
+
+	if load_failed
+		puts "load_failed - could not add hypernyms!"
+		print invalid_lines
+		print "\n"
+		return invalid_lines
+	else
+		# add edges to the graph (and synset ids if necessary)
+		temp_hash.keys.each do |source|
+			temp_hash[source].each do |dest|
+				addHypernym source,dest
+			end
+		end
+		puts "success - hypernyms were added to the graph!"
+		print @graph.vertices
+		print "\n"
+		return nil
+	end
     end
+
+# addHypernym() adds a relationship between the source and dest vertices
+# returns true if edge was added to the graph, false if not
 
     def addHypernym(source, destination)
-        raise Exception, "Not implemented"
+	
+	if (source > -1) && (destination > -1) && (source != destination)
+		if !@graph.hasVertex? source
+			@graph.addVertex source
+		end
+
+		if !@graph.hasVertex? destination
+			@graph.addVertex destination
+		end
+		@graph.addEdge source,destination
+		return true
+	else
+		return false
+	end
     end
 
+# lca() finds the lowest common ancestors of two synset ids
+# returns an array of lcas, empty array, or nil if the ids don't exist
+
     def lca(id1, id2)
-        raise Exception, "Not implemented"
+	result_arr = Array.new
+
+	if (!@graph.hasVertex? id1) || (!@graph.hasVertex? id2)
+		return nil
+	else
+		h1 = @graph.bfs(id1)
+		h2 = @graph.bfs(id2)
+		common_arr = find_common(h1,h2)
+		
+		if !common_arr.empty?
+			min_length = common_arr.values.min
+			common_arr.each do |id,length|
+				if length == min_length
+					result_arr.push id
+				end
+			end
+		end
+		return result_arr
+	end
+    end
+
+# find_common() is a helper method for the lca
+# returns a hash of common elements and their lengths, or an empty hash
+
+    def find_common(hash1, hash2)
+	common_elements = Hash.new		
+	hash1.each do |id,length|
+		if hash2.include? id
+			common_elements[id] = hash1[id] + hash2[id]
+		end
+	end
+	return common_elements
     end
 end
 
-# PUT COMMENT FOR COMMAND PARSER CLASS HERE
 
 class CommandParser
+
+# initialize() sets up a CommandParser class
+# creates local variables for a synsets and hypernyms object
+
     def initialize
         @synsets = Synsets.new
         @hypernyms = Hypernyms.new
     end
 
+# parse() parses a command and updates the appropriate symbols
+# if :recognized_command, then :result should be set to return value/error 
+
     def parse(command)
-        raise Exception, "Not implemented"
+
+	# INTERACTIVE SHELL WON'T DISPLAY INVALID COMMAND FOR INVALID ONES
+	# WHY? look at interactive.rb and figure out?
+
+	return_hash = Hash.new
+	split = command.split(" ")
+	
+	if split[0] == "load"
+		return_hash[:recognized_command] = :load
+		return_hash[:result] = parse_load(command)
+
+	elsif split[0] == "lookup" 
+		# call the parse_load() function
+
+	elsif split[0] == "find"  
+		# call the parse_find() function
+
+	elsif split[0] = "findmany"
+		# call the parse_findmany() function
+	
+	elsif split[0] = "lca"
+		# call the parse_lca() function
+	
+	else
+		return_hash[:recognized_command] = :invalid	
+      	end
+	return return_hash
+    end
+
+
+    def parse_load(command)
+	
+	# return true -> command successfully prased
+	# return false -> syn/hyp file invalid, undefined ids not in syn file
+	# return :error -> format invalid/arguments added
+
+	c_arr = command.scan(/^(\S+) (\S+) (\S+)$/)
+	if c_arr.empty?
+		return :error
+	end
+	synset_file = c_arr[0][1]
+	hypernym_file = c_arr[0][2]
+	puts synset_file
+	puts hypernym_file 
+	if (!File.file? synset_file) || (!File.file? hypernym_file)
+		return false
+	end
+
+	# somehow, check that all hyps are in the synsets file?
+	# do this BEFORE you modify the @synsets object
+
+	puts "now checking if hypernyms are contained in synsets_file"
+	return true
+    end
+
+    def parse_lookup(command)
+    end
+
+    def parse_find(command)
+    end
+
+    def parse_findmany(command)
+    end
+
+    def parse_lca(command)
     end
 end
 
 # interactive portion of the code to test each class
 
 s = Synsets.new
-result = s.load("inputs/public_synsets_valid")
-print result
+s.load("inputs/public_synsets_valid")
 
-search = s.lookup(3)
-print search
-print "\n"
 
