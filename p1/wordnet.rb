@@ -41,16 +41,12 @@ class Synsets
 	end
 
 	if load_failed
-		print invalid_lines
-		print "\n"
 		return invalid_lines
 	else
 		# add ids and synsets to the hashmap, return nil
 		temp_hash.each do |key, value|
 			addSet(key, value)
 		end
-		print @hash
-		print "\n"
 		return nil
 	end
     end 
@@ -60,7 +56,7 @@ class Synsets
 			
     def addSet(synset_id, nouns)
 	
-	if (synset_id > 0) && (!nouns.empty?) && (!@hash.has_key? synset_id) 
+	if (synset_id > -1) && (!nouns.empty?) && (!@hash.has_key? synset_id) 
 		@hash[synset_id] = nouns
 		return true
 	else
@@ -73,7 +69,6 @@ class Synsets
 
     def lookup(synset_id)
 	arr = Array.new
-
 	if @hash.has_key? synset_id
 		return @hash[synset_id]
 	else
@@ -158,9 +153,6 @@ class Hypernyms
 	end
 
 	if load_failed
-		puts "load_failed - could not add hypernyms!"
-		print invalid_lines
-		print "\n"
 		return invalid_lines
 	else
 		# add edges to the graph (and synset ids if necessary)
@@ -169,9 +161,6 @@ class Hypernyms
 				addHypernym source,dest
 			end
 		end
-		puts "success - hypernyms were added to the graph!"
-		print @graph.vertices
-		print "\n"
 		return nil
 	end
     end
@@ -189,7 +178,9 @@ class Hypernyms
 		if !@graph.hasVertex? destination
 			@graph.addVertex destination
 		end
-		@graph.addEdge source,destination
+		if !@graph.hasEdge? source,destination
+			@graph.addEdge source,destination
+		end
 		return true
 	else
 		return false
@@ -251,76 +242,102 @@ class CommandParser
 
     def parse(command)
 
-	# INTERACTIVE SHELL WON'T DISPLAY INVALID COMMAND FOR INVALID ONES
-	# WHY? look at interactive.rb and figure out?
-
-	return_hash = Hash.new
+	hash = Hash.new
 	split = command.split(" ")
-	
-	if split[0] == "load"
-		return_hash[:recognized_command] = :load
-		return_hash[:result] = parse_load(command)
 
-	elsif split[0] == "lookup" 
-		# call the parse_load() function
-
-	elsif split[0] == "find"  
-		# call the parse_find() function
-
-	elsif split[0] = "findmany"
-		# call the parse_findmany() function
-	
-	elsif split[0] = "lca"
-		# call the parse_lca() function
-	
+	case split[0]
+	when "load"
+		hash[:recognized_command] = :load
+		hash[:result] = parse_load(command)
+	when "lookup" 
+		hash[:recognized_command] = :lookup
+		hash[:result] = parse_lookup(command)
+	when "find"
+		hash[:recognized_command] = :find
+		hash[:result] = parse_find(command)  
+	when "findmany"
+		hash[:recognized_command] = :findmany
+		hash[:return] = parse_findmany(command)
+	when "lca"
+		hash[:recognized_command] = :lca
+		hash[:return] = parse_lca(command)
 	else
-		return_hash[:recognized_command] = :invalid	
+		hash[:recognized_command] = :invalid	
       	end
-	return return_hash
+	return hash
     end
 
+# parse_load() parses, validates, and executes the load command
+# returns true, false for invalid files/ids, :error for invalid format 
 
     def parse_load(command)
-	
-	# return true -> command successfully prased
-	# return false -> syn/hyp file invalid, undefined ids not in syn file
-	# return :error -> format invalid/arguments added
 
-	c_arr = command.scan(/^(\S+) (\S+) (\S+)$/)
+	c_arr = command.scan(/^load (\S+) (\S+)$/)
 	if c_arr.empty?
 		return :error
 	end
-	synset_file = c_arr[0][1]
-	hypernym_file = c_arr[0][2]
-	puts synset_file
-	puts hypernym_file 
+	synset_file = c_arr[0][0]
+	hypernym_file = c_arr[0][1]
 	if (!File.file? synset_file) || (!File.file? hypernym_file)
 		return false
 	end
-
-	# somehow, check that all hyps are in the synsets file?
-	# do this BEFORE you modify the @synsets object
-
-	puts "now checking if hypernyms are contained in synsets_file"
-	return true
+	if !validate_hypernyms(synset_file,hypernym_file)
+		return false
+	end
+	@synsets.load(synset_file)
+	@hypernyms.load(hypernym_file)
+	return true	
     end
+
+# validate_hypernyms() validates the ids from the hypernym file
+# returns true if all ids are defined in the synset file, false if not
+
+    def validate_hypernyms(synset_file, hypernym_file)
+	synset_arr = Array.new
+	status = true
+
+	File.readlines(synset_file).each do |line|
+		synset_id = line.scan(/^id: (\d+) synset: (\S+)$/)
+		synset_arr.push synset_id[0][0].to_i 
+	end
+
+	File.readlines(hypernym_file).each do |line|
+		ids = line.scan(/^from: (\d+) to: (\S+)$/)
+		id1 = ids[0][0].to_i
+		id2 = ids[0][1].to_i
+		
+		if (!synset_arr.include? id1) || (!synset_arr.include? id2) 
+			status = false
+		end
+	end
+	return status
+    end
+
+# parse_lookup() parses, validates, and executes the lookup command
+# returns result of the lookup, else returns :error for invalid format
 
     def parse_lookup(command)
+	c_arr = command.scan(/^lookup (\d+)$/)
+	if c_arr.empty?
+		return :error
+	end
+	result = @synsets.lookup(c_arr[0][0].to_i)
+	return result
     end
+
+# parse_find()...
 
     def parse_find(command)
     end
 
+# parse_findmany...
+
     def parse_findmany(command)
     end
+
+#parse_lca...
 
     def parse_lca(command)
     end
 end
-
-# interactive portion of the code to test each class
-
-s = Synsets.new
-s.load("inputs/public_synsets_valid")
-
 
