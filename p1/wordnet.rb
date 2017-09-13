@@ -1,3 +1,4 @@
+# Synsets, Hypernyms, and CommandParser by Anna Blendermann
 require_relative "graph.rb"
 
 class Synsets
@@ -257,10 +258,10 @@ class CommandParser
 		hash[:result] = parse_find(command)  
 	when "findmany"
 		hash[:recognized_command] = :findmany
-		hash[:return] = parse_findmany(command)
+		hash[:result] = parse_findmany(command)
 	when "lca"
 		hash[:recognized_command] = :lca
-		hash[:return] = parse_lca(command)
+		hash[:result] = parse_lca(command)
 	else
 		hash[:recognized_command] = :invalid	
       	end
@@ -325,19 +326,45 @@ class CommandParser
 	return result
     end
 
-# parse_find()...
+# parse_find() parses, validates, and executes the find command
+# returns result of find, else returns :error for invalid format
 
     def parse_find(command)
+	c_arr = command.scan(/^find (\S+)$/)
+	if c_arr.empty?
+		return :error
+	end
+	result = @synsets.findSynsets(c_arr[0][0])
+	return result
     end
 
-# parse_findmany...
+# parse_findmany() does batch processing for the find command
+# returns the result of find(arr), or :error for invalid format/args
 
     def parse_findmany(command)
+	c_arr = command.scan(/^findmany (\S+),*$/)
+	if c_arr.empty?
+		return :error
+	end
+	nouns = c_arr[0][0].split(",")
+	result = @synsets.findSynsets(nouns)
+	return result
     end
 
-#parse_lca...
+# parse_lca() parses, validates, and executes the lca command
+# returns the result of lca (no lca possible), :error for invalid format
 
     def parse_lca(command)
+	c_arr = command.scan(/^lca (\d+) (\d+)$/)
+
+	# c_arr will return empty if one/both ids are not ints
+	if c_arr.empty?
+		return :error
+	end
+	id1 = c_arr[0][0].to_i
+	id2 = c_arr[0][1].to_i
+	result = @hypernyms.lca(id1,id2)
+	return result
     end
 end
 
