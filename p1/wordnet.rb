@@ -109,6 +109,13 @@ class Synsets
 	return array_ids
     end
 
+# get_ids() is my added student method that gets the object's synset_ids
+# this function is used in CommandParser.load()
+
+    def get_ids
+	return @hash.keys
+    end
+
 end
 
 
@@ -134,7 +141,7 @@ class Hypernyms
 
 	File.readlines(hypernyms_file).each do |line|
 		hyp_line = line.scan(/^from: (\d+) to: (\S+)$/)
-
+	
 		if hyp_line.empty?
 			invalid_lines.push count
 			load_failed = true
@@ -142,7 +149,7 @@ class Hypernyms
 			from = hyp_line[0][0].to_i
 			to = hyp_line[0][1].split(",")
 			to_array = to.collect{|x| x.to_i}
-			
+	
 			if to_array.include? from
 				invalid_lines.push count
 				load_failed = true
@@ -153,7 +160,7 @@ class Hypernyms
 		count = count + 1
 	end
 
-	if load_failed
+	if load_failed == true
 		return invalid_lines
 	else
 		# add edges to the graph (and synset ids if necessary)
@@ -279,40 +286,46 @@ class CommandParser
 	end
 	synset_file = c_arr[0][0]
 	hypernym_file = c_arr[0][1]
+
+	# 1. check that both files exist
 	if (!File.file? synset_file) || (!File.file? hypernym_file)
 		return false
 	end
-	if !validate_hypernyms(synset_file,hypernym_file)
+
+	# 2. check the return value of loading into copy objects
+	s = Synsets.new
+	h = Hypernyms.new
+	if (!s.load(synset_file) == nil) && (!h.load(hypernym_file) == nil)
 		return false
+	end
+	
+	# 3. check that each hypernym exists in the synset file/object	
+	syn_object = @synsets.get_ids
+	syn_temp = s.get_ids
+
+	hyp_temp = get_hypernyms(hypernym_file)
+	hyp_temp.each do |id|
+		if (!syn_temp.include? id) && (!syn_object.include? id)
+			return false
+		end
 	end
 	@synsets.load(synset_file)
 	@hypernyms.load(hypernym_file)
 	return true	
     end
 
-# validate_hypernyms() validates the ids from the hypernym file
-# returns true if all ids are defined in the synset file, false if not
+# GET HYPERNYMS METHOD
 
-    def validate_hypernyms(synset_file, hypernym_file)
-	synset_arr = Array.new
-	status = true
-
-	File.readlines(synset_file).each do |line|
-		synset_id = line.scan(/^id: (\d+) synset: (\S+)$/)
-		synset_arr.push synset_id[0][0].to_i 
-	end
-
-	File.readlines(hypernym_file).each do |line|
+    def get_hypernyms(file)
+	arr = Array.new
+	File.readlines(file).each do |line|
 		ids = line.scan(/^from: (\d+) to: (\S+)$/)
-		id1 = ids[0][0].to_i
-		id2 = ids[0][1].to_i
-		
-		if (!synset_arr.include? id1) || (!synset_arr.include? id2) 
-			status = false
-		end
+		arr.push ids[0][0].to_i
+		arr.push ids[0][1].to_i
 	end
-	return status
+	return arr
     end
+	
 
 # parse_lookup() parses, validates, and executes the lookup command
 # returns result of the lookup, else returns :error for invalid format
