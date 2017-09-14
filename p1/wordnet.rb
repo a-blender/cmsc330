@@ -304,6 +304,9 @@ class CommandParser
 	syn_temp = s.get_ids
 
 	hyp_temp = get_hypernyms(hypernym_file)
+	if hyp_temp == nil
+		return false
+	end
 	hyp_temp.each do |id|
 		if (!syn_temp.include? id) && (!syn_object.include? id)
 			return false
@@ -314,18 +317,22 @@ class CommandParser
 	return true	
     end
 
-# GET HYPERNYMS METHOD
+# get_hypernyms() gets all synset ids from the hypernyms file
+# returns an array of ids, or returns nil if any line is invalid
 
     def get_hypernyms(file)
 	arr = Array.new
 	File.readlines(file).each do |line|
 		ids = line.scan(/^from: (\d+) to: (\S+)$/)
-		arr.push ids[0][0].to_i
-		arr.push ids[0][1].to_i
+		if ids.empty?
+			return nil
+		else
+			arr.push ids[0][0].to_i
+			arr.push ids[0][1].to_i
+		end
 	end
 	return arr
     end
-	
 
 # parse_lookup() parses, validates, and executes the lookup command
 # returns result of the lookup, else returns :error for invalid format
