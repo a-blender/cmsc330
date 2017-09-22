@@ -50,32 +50,81 @@ let rec list_swap_val lst x y =
 	| [] -> []
 	| h::t -> (if h=x then y
 		else if h=y then x
-		else h)::(list_swap_list t x y)
+		else h)::(list_swap_val t x y)
 ;;
 
+
+(* CAM - how exactly do you start unzip?? *)
+(* no helper function, do an (unzip lst) = *)
+(* you're gonna need two pattern matches *)
+
+(* you can do a let (x,y) = (4,5) in *)  
 let rec unzip lst = failwith "unimplemented"
 
-let rec index_help x lst curr = failwith "unimplemented"
-	
 
-let rec index x lst = failwith "unimplemented"
+let rec index_help x lst curr = 
+	match lst with
+	| [] -> -1
+	| h::t -> if h=x then curr 
+		else (index_help x t (curr + 1)) 
+;;	
+
+let rec index x lst = 
+	match lst with
+	| [] -> -1
+	| h::t -> index_help x lst 0
+;;
 
 (****************)
 (* Part 3: Sets *)
 (****************)
 
-let rec insert x a = failwith "unimplemented"
+let rec elem x a =
+	match a with
+	| [] -> false
+	| h::t -> if h=x then true else elem x t
+;;
 
+(* make sure you can't add duplicates here *)
+let rec insert x a = 
+	if (elem x a)=false then x::a
+	else a 
+;;
+
+(* don't do this one until you do subset *)
 let rec eq a b = failwith "unimplemented"
 
-let rec card a = failwith "unimplemented"
+let rec card_help a count =
+	match a with
+	| [] -> count
+	| h::t -> card_help t (count + 1)
+;; 
 
-let rec elem x a = failwith "unimplemented"
+let rec card a =
+	card_help a 0 
+;;
 
-let rec remove x a = failwith "unimplemented"
+let rec remove x a = 
+	match a with
+	| [] -> a
+	| h::t -> if h <> x then h::(remove x t) else (remove x t)
+;;
 
-let rec union a b = failwith "unimplemented"
+let rec union a b = 
+	match a with
+	| [] -> b
+	| h::t -> union t (insert h b)
+;; 
 
-let rec intersection a b = failwith "unimplemented"
+(* STILL NEED TO TEST *)
+let rec intersection a b = 
+	match a with
+	| [] -> a
+	| h::t -> if (elem h b)=false then (intersection t b)
+	else h::(intersection t b)
+;;
 
+(* STILL NEED TO IMPLEMENT *)
 let rec subset a b = failwith "unimplemented"
+
+
