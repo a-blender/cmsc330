@@ -3,7 +3,10 @@
 (****************************)
 
 let mult_of_y x y =
-	if (x mod y) == 0 then true else false
+	if y <> 0 then 
+		(if (x mod y) == 0 then true 
+		else false)
+	else false
 ;; 
 
 let head_divisor lst = 
