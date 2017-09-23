@@ -85,14 +85,10 @@ let rec elem x a =
 	| h::t -> if h=x then true else elem x t
 ;;
 
-(* make sure you can't add duplicates here *)
 let rec insert x a = 
 	if (elem x a)=false then x::a
 	else a 
 ;;
-
-(* don't do this one until you do subset *)
-let rec eq a b = failwith "unimplemented"
 
 let rec card_help a count =
 	match a with
@@ -116,7 +112,6 @@ let rec union a b =
 	| h::t -> union t (insert h b)
 ;; 
 
-(* STILL NEED TO TEST *)
 let rec intersection a b = 
 	match a with
 	| [] -> a
@@ -124,7 +119,22 @@ let rec intersection a b =
 	else h::(intersection t b)
 ;;
 
-(* STILL NEED TO IMPLEMENT *)
-let rec subset a b = failwith "unimplemented"
+let rec subset_help a b status =
+	match a with
+	| [] -> status
+	| h::t -> if (elem h b)=false then false
+	else (subset_help t b true)
+;;  
 
+let rec subset a b = 
+	match a with
+	| [] -> true
+	| h::t -> subset_help a b true
+;;
+
+let rec eq a b =
+	match a with
+	| [] -> (subset b a)
+	| h::t -> (subset a b) && (subset b a)
+;;
 
