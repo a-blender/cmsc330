@@ -53,14 +53,27 @@ let rec list_swap_val lst x y =
 		else h)::(list_swap_val t x y)
 ;;
 
+(* THE NEXT THREE FUNCTIONS ARE FOR UNZIP *)
 
-(* CAM - how exactly do you start unzip?? *)
-(* no helper function, do an (unzip lst) = *)
-(* you're gonna need two pattern matches *)
+let rec append_end x lst =
+	match lst with
+	| [] -> x::[]
+	| h::t -> h::(append_end x t)
+;;
+	
+let rec unzip_aux lst lst1 lst2 =
+	match lst with
+	| [] -> (lst1, lst2)
+	| (x,y)::t -> unzip_aux t (append_end x lst1) (append_end y lst2)
+;;
 
-(* you can do a let (x,y) = (4,5) in *)  
-let rec unzip lst = failwith "unimplemented"
+let rec unzip lst =
+	match lst with
+	| [] -> ([],[])
+	| h::t -> unzip_aux lst [] []
+;;
 
+(* THE END OF UNZIP *)
 
 let rec index_help x lst curr = 
 	match lst with
