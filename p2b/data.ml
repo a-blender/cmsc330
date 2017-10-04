@@ -1,5 +1,4 @@
-(* open Funs *)
-#use "funs.ml";;
+open Funs
 
 (********************************)
 (* Part 1: High Order Functions *)
