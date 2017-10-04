@@ -1,4 +1,5 @@
-open Funs
+(* open Funs *)
+#use "funs.ml";;
 
 (********************************)
 (* Part 1: High Order Functions *)
@@ -162,14 +163,17 @@ let src_edges n g =
 		if n=s then (append [e] acc) else acc) [] lst
 ;; 
 
-let rec r_help n lst g = 
-	fold (fun acc e -> let { src = s; dst = d } = e in
-		append [d] (r_help d (src_edges d g) g)) [] lst  	
+let rec r_help n g t = 
+	let tree = int_insert n t in
+	let edges = src_edges n g in
+	fold (fun tr e -> let { src = s; dst = d } = e in
+		if (int_mem d tr)=false then (r_help d g tr) 
+		else tree) tree edges
+;;
 
 let reachable n g =
 	let { nodes = tree; edges = lst } = g in 
 	if (int_mem n tree)=true 
-		then int_insert_all (n::(r_help n (src_edges n g)) g) empty_int_tree
-		else empty_int_tree
+		then (r_help n g empty_int_tree) else empty_int_tree
 ;;
 
