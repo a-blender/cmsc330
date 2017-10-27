@@ -119,8 +119,8 @@ and nfa_help2 nfa r1 r2 x d =
 		let s = move nfa x a in
 		let e = (e_closure nfa s) in match e with
 			| [] -> (l1,l2,l3)
-			| h::t -> let curr = int_list_to_int x in
-			let next = int_list_to_int e in
+			| h::t -> let curr = int_list_to_int [x] in
+			let next = int_list_to_int [e] in
 		
 		if (check_fs nfa e)=true then
 		(l1@[e], l2@[next], l3@[(curr, Some a, next)]) else
@@ -132,11 +132,12 @@ and nfa_help2 nfa r1 r2 x d =
 	let uv2 = update_lists v uv sl in
 
 	(* update the dfa final state and transition list *)
+	(*
 	match d with
-		| (f,t) -> let d_list = (f@fl, t@tl) in
+		| (f,t) -> let d_list = (f@fl, t@tl) in *)
 
 	(* call nfa_help with the updated lists *)
-	nfa_help nfa v uv2 d_list
+	nfa_help nfa v uv2 d
 ;;
 
 let nfa_to_dfa m = match m with
@@ -146,7 +147,45 @@ let nfa_to_dfa m = match m with
 
 (* END OF NFA -> DFA FUNCTIONS *)
 
-let accept m s = failwith "Unimplemented"
+(* ACCEPT FUNCTIONS *)
+
+let rec str_list s = match s with
+    | "" -> []
+    | s -> (String.get s 0)::(str_list (String.sub s 1 ((String.length s)-1)))
+;;
+
+let next_state ts s c = 
+	List.fold_left (fun lst t -> match t with
+		| (x,None,z) -> lst
+		| (x,Some y,z) -> if x=s && y=c then z::lst else lst) [] ts
+;;
+
+let rec accept_help ts fs s str = 
+	let st = List.hd s in match str with
+	| [] -> (List.mem st fs)
+	| h::t -> if (next_state ts st h)=[] then false else
+		accept_help ts fs (next_state ts st h) t
+;;
+	
+
+let accept m s = 
+	let str = str_list s in
+	let dfa = (nfa_to_dfa m) in match dfa with
+	| (ss,fs,ts) -> if str=[] then false else (accept_help ts fs ss str)
+
+(* END OF ACCEPT FUNCTIONS *)
+
+(* STATS FUNCTIONS *)
+
+let num_states m = 
+	let t = get_transitions m in
+	let s = List.fold_left (fun lst (x,y,z) ->  x::z::lst) [] t in
+		List.length (List.sort_uniq compare s)
+;;
+
+let num_finals m = match m with
+	| (ss,fs,ts) -> List.length fs
+;;
 
 let stats m = failwith "Unimplemented"
 
