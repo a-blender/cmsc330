@@ -13,7 +13,7 @@ let int_list_to_int =
   let next' = get_next_gen () in
   let tbl = Hashtbl.create 10 in
   let compare a b = if a < b then -1 else if a = b then 0 else 1 in
-  (fun lst ->
+  (fun (lst : int list) ->
       let slst = List.sort_uniq compare lst in
       if Hashtbl.mem tbl slst then Hashtbl.find tbl slst
     else let n = next' () in Hashtbl.add tbl slst n; n)
@@ -119,8 +119,8 @@ and nfa_help2 nfa r1 r2 x d =
 		let s = move nfa x a in
 		let e = (e_closure nfa s) in match e with
 			| [] -> (l1,l2,l3)
-			| h::t -> let curr = int_list_to_int [x] in
-			let next = int_list_to_int [e] in
+			| h::t -> let curr = int_list_to_int x in
+			let next = int_list_to_int e in
 		
 		if (check_fs nfa e)=true then
 		(l1@[e], l2@[next], l3@[(curr, Some a, next)]) else
@@ -132,17 +132,16 @@ and nfa_help2 nfa r1 r2 x d =
 	let uv2 = update_lists v uv sl in
 
 	(* update the dfa final state and transition list *)
-	(*
 	match d with
-		| (f,t) -> let d_list = (f@fl, t@tl) in *)
+		| (f,t) -> let d_list = (f@fl, t@tl) in
 
 	(* call nfa_help with the updated lists *)
-	nfa_help nfa v uv2 d
+	nfa_help nfa v uv2 d_list
 ;;
 
 let nfa_to_dfa m = match m with
-	| (x,y,z) -> let (fl,tl) = (nfa_help m [] [[x]] ([],[])) in
-		(x, fl, tl) 
+	| (x,y,z) -> let ss = int_list_to_int (e_closure m [x]) in
+		let (fl,tl) = (nfa_help m [] [[ss]] ([],[])) in (ss, fl, tl)
 ;;
 
 (* END OF NFA -> DFA FUNCTIONS *)
@@ -160,18 +159,17 @@ let next_state ts s c =
 		| (x,Some y,z) -> if x=s && y=c then z::lst else lst) [] ts
 ;;
 
-let rec accept_help ts fs s str = 
+let rec accept_help m fs s str = 
 	let st = List.hd s in match str with
 	| [] -> (List.mem st fs)
-	| h::t -> if (next_state ts st h)=[] then false else
-		accept_help ts fs (next_state ts st h) t
+	| h::t -> if (move m [st] h)=[] then false else
+		accept_help m fs (move m [st] h) t
 ;;
 	
-
 let accept m s = 
 	let str = str_list s in
-	let dfa = (nfa_to_dfa m) in match dfa with
-	| (ss,fs,ts) -> if str=[] then false else (accept_help ts fs ss str)
+	match m with
+	| (ss,fs,ts) -> if str=[] then false else (accept_help m fs [ss] str)
 
 (* END OF ACCEPT FUNCTIONS *)
 
@@ -187,10 +185,17 @@ let num_finals m = match m with
 	| (ss,fs,ts) -> List.length fs
 ;;
 
+let outgoing_counts m = failwith "Unimplemented"
+
 let stats m = failwith "Unimplemented"
 
 (* ANNA TEST *)
 let m = make_nfa 0 [2] [(0, Some 'a', 1); (1, None, 2)];;
-let n = make_nfa 0 [2] [(0, Some 'a', 1); (1, Some 'b', 0)];;
+let n = make_nfa 0 [1] [(0, Some 'a', 1); (1, Some 'b', 0)];;
 
 let x = make_nfa 0 [2;4] [(0, Some 'a', 1); (1, None, 2); (1, None, 3); (3, Some 'a', 4); (4, Some 'b', 0)];;
+
+let m1 = make_nfa 0 [1; 3] [(0,Some 'a',1); (0,Some 'a',2); (2,Some 'b',3)];;
+let m2 = make_nfa 0 [2] [(0,None, 1); (1, Some 'b', 2)];;
+
+

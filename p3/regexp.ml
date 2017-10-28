@@ -1,5 +1,5 @@
 (* CMSC 330 / Fall 2017 / Project 3 *)
-(* Name: ?? *)
+(* Name: Anna Blendermann *)
 open Nfa
 
 type regexp_t =
@@ -9,9 +9,39 @@ type regexp_t =
   | Concat of regexp_t * regexp_t
   | Star of regexp_t
 
-let regexp_to_nfa re = failwith "Unimplemented"
+(* REGEXP TO NFA FUNCTIONS *)
+
+let rec regexp_to_nfa re = match re with
+
+	| Empty_String -> let s = next() in
+		make_nfa s [s] []
+
+	| Char c -> let s1 = next() in
+		let s2 = next() in
+		make_nfa s1 [s2] [(s1,Some c,s2)]
+
+	| Concat (r1,r2) -> 
+		let n1 = (regexp_to_nfa r1) in
+		let n2 = (regexp_to_nfa r2) in
+
+		let ts = (List.fold_left (fun lst x -> 
+			(x,None,(get_start n2))::lst) [] (get_finals n1)) in  
+
+			make_nfa (get_start n1) (get_finals n2)
+			((get_transitions n1) @ ts @ (get_transitions n2))
+
+	| Union (r1,r2) ->
+
+	| Star r -> 
+;;	
+
+(* END OF REGEXP TO NFA FUNCTIONS *)
+
+(* REGEXP TO STRING *)
 
 let regexp_to_string re = failwith "Unimplemented"
+
+(* END OF REGEXP TO STRING FUNCTIONS *)
 
 (*****************************************************************)
 (* Below this point is parser code that YOU DO NOT NEED TO TOUCH *)
