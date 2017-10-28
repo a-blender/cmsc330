@@ -11,6 +11,10 @@ type regexp_t =
 
 (* REGEXP TO NFA FUNCTIONS *)
 
+let union_ts nfa state = 
+	List.fold_left (fun lst x -> (x,None,state)::lst) [] (get_finals nfa)
+;;
+
 let rec regexp_to_nfa re = match re with
 
 	| Empty_String -> let s = next() in
@@ -30,16 +34,49 @@ let rec regexp_to_nfa re = match re with
 			make_nfa (get_start n1) (get_finals n2)
 			((get_transitions n1) @ ts @ (get_transitions n2))
 
-	| Union (r1,r2) ->
+	| Union (r1,r2) ->	
+		let n1 = (regexp_to_nfa r1) in
+		let n2 = (regexp_to_nfa r2) in
+		
+		let s1 = next() in
+		let s2 = next() in
 
-	| Star r -> 
+		let ts1 = [(s1,None,(get_start n1)); (s1,None,(get_start n2))] 
+		in let ts2 = union_ts n1 s2 in
+
+		let ts3 = union_ts n2 s2 in
+		let ts = (get_transitions n1) @ ts1 @ ts2 @ ts3
+			@ (get_transitions n2) in (make_nfa s1 [s2] ts)
+
+	| Star r ->
+		let n = (regexp_to_nfa r) in
+		let s1 = next() in
+		let s2 = next() in
+		
+		let ts1 = [(s1,None,(get_start n))] in
+		let ts2 = (union_ts n s2) in
+		let ts3 = [(s1,None,s2); (s2,None,s1)] in
+		let ts = (get_transitions n) @ ts1 @ ts2 @ ts3 in
+
+		(make_nfa s1 [s2] ts)
 ;;	
 
 (* END OF REGEXP TO NFA FUNCTIONS *)
 
 (* REGEXP TO STRING *)
 
-let regexp_to_string re = failwith "Unimplemented"
+let rec regexp_to_string re = match re with
+	| Empty_String -> "(" ^ "E" ^ ")"
+	| Char c -> "(" ^ (String.make 1 c) ^ ")" 
+
+	| Union (r1,r2) -> "(" ^ (regexp_to_string r1) ^ "|" ^ 
+		(regexp_to_string r2) ^ ")" 
+
+	| Concat (r1,r2) -> "(" ^ (regexp_to_string r1) ^ 
+		(regexp_to_string r2) ^ ")"
+
+	| Star r -> "(" ^ (regexp_to_string r) ^ ")" ^ "*"
+;;	
 
 (* END OF REGEXP TO STRING FUNCTIONS *)
 

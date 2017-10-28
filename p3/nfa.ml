@@ -139,9 +139,14 @@ and nfa_help2 nfa r1 r2 x d =
 	nfa_help nfa v uv2 d_list
 ;;
 
+
 let nfa_to_dfa m = match m with
-	| (x,y,z) -> let ss = int_list_to_int (e_closure m [x]) in
-		let (fl,tl) = (nfa_help m [] [[ss]] ([],[])) in (ss, fl, tl)
+	| (x,y,z) ->
+		let s1 = (e_closure m [x]) in 
+		let s2 = (int_list_to_int s1) in
+		let f = if (check_fs m s1)=true then s2::[] else [] in 
+
+		let (fl,tl) = (nfa_help m [] [s1] (f,[])) in (s2, fl, tl)
 ;;
 
 (* END OF NFA -> DFA FUNCTIONS *)
