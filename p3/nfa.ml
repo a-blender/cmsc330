@@ -200,28 +200,51 @@ let num_finals m = match m with
 	| (ss,fs,ts) -> List.length fs
 ;;
 
+let num_edges ts s = 
+	let lst = List.fold_left (fun l (x,y,z) -> if x=s then x::l else l) 
+		[] ts in List.length lst
+;;
+
 let rec check_acc lst s = match lst with
 	| [] -> false
-	| h::t -> if h=s then true else (check_acc t s)
+	| (x,y)::t -> if x=s then true else (check_acc t s)
 ;;
 	
-let out_helper lst s = 
+let incr_count lst s = 
 	List.fold_left (fun l t -> match t with
 		| (x,y) -> if x=s then l@[(x,y+1)] else l@[(x,y)]) [] lst
 ;;
 
-(*
-let rec outgoing_counts ts d = match ts with
-	| [] -> d
-	| (x,y,z)::t -> 
-		let d1 = if (check_acc d x)=false then d@[(x,1)] 
-			else (out_helper d x) in
-		let d2 = if (check_acc d1 z)=false then d@[(z,0)]
-			else d2 in
-		outgoing_counts t d2 
-;; *) 
+let out_helper d n = 
+	if (check_acc d n)=false then d@[n,1] else (incr_count d n)
+;;
 
-let stats m = failwith  "Unimplemented" 
+let sort_edges (a,b) (c,d) = 
+	a-c
+;;
+
+let rec outgoing_counts ts d l = match ts with
+	| [] -> List.sort sort_edges d
+	| (x,y,z)::t ->
+		let n1 = (num_edges ts x) in 
+		let d1 = if (List.mem x l)=true then d else 
+			(out_helper d n1) in 
+		let l1 = x::l in
+	
+		let n2 = (num_edges ts z) in
+		let d2 = if (List.mem z l)=true then d1 else
+			(out_helper d1 n2) in
+		let l2 = z::l1 in (outgoing_counts t d2 l2)
+;;
+		
+let stats m = match m with
+	| (ss,fs,[]) -> {num_states=(num_states m); num_finals=(num_finals m);
+		outgoing_counts=[(0,1)]}
+	| (ss,fs,ts) -> {num_states=(num_states m); num_finals=(num_finals m);
+		outgoing_counts=(outgoing_counts ts [] [])}
+;;
+
+(* END OF STATS FUNCTION *) 
 
 (* ANNA TEST *)
 let m = make_nfa 0 [2] [(0, Some 'a', 1); (1, None, 2)];;
