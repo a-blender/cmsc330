@@ -158,11 +158,19 @@ let rec str_list s = match s with
     | s -> (String.get s 0)::(str_list (String.sub s 1 ((String.length s)-1)))
 ;;
 
-let next_state ts s c = 
-	List.fold_left (fun lst t -> match t with
-		| (x,None,z) -> lst
-		| (x,Some y,z) -> if x=s && y=c then z::lst else lst) [] ts
+(*
+let rec accept_help m state str = match str with
+	| [] -> (check_fs m state)
+	| h::t -> accept_help m (e_closure m (move m state h)) t
 ;;
+
+let accept m s = 
+	let str = str_list s in 
+	match m with
+	| (x,y,z) -> let a=(x+0) in accept_help m (get_start m) str
+;;
+*)
+	
 
 let rec accept_help m fs s str = 
 	let st = List.hd s in match str with
@@ -170,11 +178,13 @@ let rec accept_help m fs s str =
 	| h::t -> if (move m [st] h)=[] then false else
 		accept_help m fs (move m [st] h) t
 ;;
-	
+
+
 let accept m s = 
 	let str = str_list s in
 	match m with
 	| (ss,fs,ts) -> if str=[] then false else (accept_help m fs [ss] str)
+
 
 (* END OF ACCEPT FUNCTIONS *)
 
@@ -190,9 +200,28 @@ let num_finals m = match m with
 	| (ss,fs,ts) -> List.length fs
 ;;
 
-let outgoing_counts m = failwith "Unimplemented"
+let rec check_acc lst s = match lst with
+	| [] -> false
+	| h::t -> if h=s then true else (check_acc t s)
+;;
+	
+let out_helper lst s = 
+	List.fold_left (fun l t -> match t with
+		| (x,y) -> if x=s then l@[(x,y+1)] else l@[(x,y)]) [] lst
+;;
 
-let stats m = failwith "Unimplemented"
+(*
+let rec outgoing_counts ts d = match ts with
+	| [] -> d
+	| (x,y,z)::t -> 
+		let d1 = if (check_acc d x)=false then d@[(x,1)] 
+			else (out_helper d x) in
+		let d2 = if (check_acc d1 z)=false then d@[(z,0)]
+			else d2 in
+		outgoing_counts t d2 
+;; *) 
+
+let stats m = failwith  "Unimplemented" 
 
 (* ANNA TEST *)
 let m = make_nfa 0 [2] [(0, Some 'a', 1); (1, None, 2)];;
