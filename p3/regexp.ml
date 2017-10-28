@@ -42,11 +42,11 @@ let rec regexp_to_nfa re = match re with
 		let s2 = next() in
 
 		let ts1 = [(s1,None,(get_start n1)); (s1,None,(get_start n2))] 
-		in let ts2 = union_ts n1 s2 in
+		in let ts2 = (union_ts n1 s2) in
+		let ts3 = (union_ts n2 s2) in
 
-		let ts3 = union_ts n2 s2 in
-		let ts = (get_transitions n1) @ ts1 @ ts2 @ ts3
-			@ (get_transitions n2) in (make_nfa s1 [s2] ts)
+		let ts = ((get_transitions n1) @ ts1 @ ts2 @ ts3
+			@ (get_transitions n2)) in (make_nfa s1 [s2] ts)
 
 	| Star r ->
 		let n = (regexp_to_nfa r) in

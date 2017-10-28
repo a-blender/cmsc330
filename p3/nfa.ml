@@ -159,32 +159,24 @@ let rec str_list s = match s with
 ;;
 
 (*
-let rec accept_help m state str = match str with
-	| [] -> (check_fs m state)
-	| h::t -> accept_help m (e_closure m (move m state h)) t
-;;
-
-let accept m s = 
-	let str = str_list s in 
-	match m with
-	| (x,y,z) -> let a=(x+0) in accept_help m (get_start m) str
-;;
-*)
-	
-
 let rec accept_help m fs s str = 
 	let st = List.hd s in match str with
-	| [] -> (List.mem st fs)
-	| h::t -> if (move m [st] h)=[] then false else
-		accept_help m fs (move m [st] h) t
-;;
+	| [] -> (check_fs st fs)
+	| h::t -> if (e_closure m (move m [st] h))=[] then false else
+		accept_help m fs ((e_closure m (move m [st] h)) t
+;; *)
 
+let rec accept_help m s str = 
+	| [] -> (check_fs s (final_states m))
+	| h::t -> if (e_closure m (move m s h))=[] then false else
+		accept_help m fs ((e_closure m (move m s h)) t
+;;
 
 let accept m s = 
 	let str = str_list s in
 	match m with
-	| (ss,fs,ts) -> if str=[] then false else (accept_help m fs [ss] str)
-
+	| (ss,fs,ts) -> (accept_help m [ss] str)
+;;
 
 (* END OF ACCEPT FUNCTIONS *)
 
