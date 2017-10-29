@@ -20,21 +20,21 @@ let int_list_to_int =
 
 (* YOUR CODE BEGINS HERE *)
 
-type nfa_t = (int * int list * transition list)  
+type nfa_t = NFA of (int * int list * transition list)  
 
 let get_start m = match m with
-	| (ss,fs,ts) -> ss
+	| NFA(ss,fs,ts) -> ss
 ;;
 
 let get_finals m = match m with
-	| (ss,fs,ts) -> fs
+	| NFA(ss,fs,ts) -> fs
 ;; 
 
 let get_transitions m = match m with
-	| (ss,fs,ts) -> ts
+	| NFA (ss,fs,ts) -> ts
 ;;
 
-let make_nfa ss fs ts = (ss,fs,ts)
+let make_nfa ss fs ts = NFA(ss,fs,ts)
 
 (* E-CLOSURE FUNCTIONS *)
 
@@ -71,8 +71,9 @@ let get_edges n l c =
 ;;
 
 let move m l c =
+	let t = (get_transitions m) in
 	List.fold_left (fun lst x -> 
-		concat_lists lst (get_edges x (get_transitions m) c)) [] l
+		concat_lists lst (get_edges x t c)) [] l
 ;;
  
 (* END OF MOVE FUNCTIONS *)
@@ -97,8 +98,8 @@ let update_lists r1 r2 l =
 		else lst) r2 l
 ;;   
 
-let check_fs m l = match m with 
-	| (ss,fs,ts) ->
+let check_fs (m : nfa_t) (l : int list) = match m with 
+	| NFA(ss,fs,ts) ->
 		let lst = List.map (fun x -> (List.mem x l)) fs in
 		let stat = (List.mem true lst) in stat
 ;;
@@ -141,12 +142,12 @@ and nfa_help2 nfa r1 r2 x d =
 
 
 let nfa_to_dfa m = match m with
-	| (x,y,z) ->
+	| NFA(x,y,z) ->
 		let s1 = (e_closure m [x]) in 
 		let s2 = (int_list_to_int s1) in
 		let f = if (check_fs m s1)=true then s2::[] else [] in 
 
-		let (fl,tl) = (nfa_help m [] [s1] (f,[])) in (s2, fl, tl)
+		let (fl,tl) = (nfa_help m [] [s1] (f,[])) in NFA(s2, fl, tl)
 ;;
 
 (* END OF NFA -> DFA FUNCTIONS *)
@@ -158,24 +159,15 @@ let rec str_list s = match s with
     | s -> (String.get s 0)::(str_list (String.sub s 1 ((String.length s)-1)))
 ;;
 
-(*
-let rec accept_help m fs s str = 
-	let st = List.hd s in match str with
-	| [] -> (check_fs st fs)
-	| h::t -> if (e_closure m (move m [st] h))=[] then false else
-		accept_help m fs ((e_closure m (move m [st] h)) t
-;; *)
-
-let rec accept_help m s str = 
-	| [] -> (check_fs s (final_states m))
-	| h::t -> if (e_closure m (move m s h))=[] then false else
-		accept_help m fs ((e_closure m (move m s h)) t
+let rec accept_help (m : nfa_t) (s : int list) (str : char list) = 
+	match str with
+	| [] -> (check_fs m s)
+	| h::t -> (accept_help m (e_closure m (move m s h)) t)
 ;;
 
 let accept m s = 
-	let str = str_list s in
-	match m with
-	| (ss,fs,ts) -> (accept_help m [ss] str)
+	let str = (str_list s) in 
+	accept_help m (e_closure m [(get_start m)]) str
 ;;
 
 (* END OF ACCEPT FUNCTIONS *)
@@ -189,7 +181,7 @@ let num_states m =
 ;;
 
 let num_finals m = match m with
-	| (ss,fs,ts) -> List.length fs
+	| NFA(ss,fs,ts) -> List.length fs
 ;;
 
 let num_edges ts s = 
@@ -230,9 +222,11 @@ let rec outgoing_counts ts d l = match ts with
 ;;
 		
 let stats m = match m with
-	| (ss,fs,[]) -> {num_states=(num_states m); num_finals=(num_finals m);
+	| NFA(ss,fs,[]) -> {num_states=(num_states m); 
+		num_finals=(num_finals m); 
 		outgoing_counts=[(0,1)]}
-	| (ss,fs,ts) -> {num_states=(num_states m); num_finals=(num_finals m);
+	| NFA(ss,fs,ts) -> {num_states=(num_states m); 
+		num_finals=(num_finals m);
 		outgoing_counts=(outgoing_counts ts [] [])}
 ;;
 
