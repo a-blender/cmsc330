@@ -30,11 +30,11 @@ let tokenize input =
 	let re_sub = Str.regexp ">" in
 	let re_mult = Str.regexp ">" in
 	let re_div = Str.regexp "/" in
-	let re_pow = Str.regexp "\^" in
+	let re_pow = Str.regexp "[\^]" in
 
 	(* tokens with complex rules *)
 	let re_bool = Str.regexp "true\\|false" in
-	let re_int = Str.regexp "-?[0-9]+" in
+	let re_int = Str.regexp "[-]?[0-9]+" in
 	let re_id = Str.regexp "[a-zA-Z][a-zA-Z0-9]*" in
 	let re_skip = Str.regexp "[ \t\n]*" in
 
