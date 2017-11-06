@@ -18,17 +18,17 @@ let tokenize input =
 	let re_and = Str.regexp "&&" in
 	let re_not = Str.regexp "!" in
 	let re_semi = Str.regexp ";" in
-	let re_type_int = Str.regexp "int" in (*continue here *)
+	let re_type_int = Str.regexp "int" in 
 	let re_type_bool = Str.regexp "bool" in
 	let re_print = Str.regexp "printf" in
-	let re_main = Str.regexp "main" in
+	let re_main = Str.regexp "main" in (*continue here *)
 	let re_if = Str.regexp "if" in
 	let re_else = Str.regexp "else" in
 	let re_while = Str.regexp "while" in
 	
-	let re_plus = Str.regexp ">" in
-	let re_sub = Str.regexp ">" in
-	let re_mult = Str.regexp ">" in
+	let re_plus = Str.regexp "+" in
+	let re_sub = Str.regexp "-" in
+	let re_mult = Str.regexp "*" in
 	let re_div = Str.regexp "/" in
 	let re_pow = Str.regexp "\\^" in
 
@@ -119,19 +119,109 @@ let tokenize input =
 				then let token_id = Str.matched_string str in
 				(Tok_ID (token_key^token_id))::(next_token str (Str.match_end()))
 			else (Tok_Type_Int)::(next_token str new_pos)
+			
+		(* Tok_Type_Bool *)
+		else if (Str.string_match re_bool str pos) 
+			then let token_key = Str.matched_string str in
+			let new_pos = Str.match_end() in
+			
+			if (Str.string_match re_extra str new_pos)
+				then let token_id = Str.matched_string str in
+				(Tok_ID (token_key^token_id))::(next_token str (Str.match_end()))
+			else (Tok_Type_Bool)::(next_token str new_pos)
+			
+		(* Tok_Print *)
+		else if (Str.string_match re_print str pos) 
+			then let token_key = Str.matched_string str in
+			let new_pos = Str.match_end() in
+			
+			if (Str.string_match re_extra str new_pos)
+				then let token_id = Str.matched_string str in
+				(Tok_ID (token_key^token_id))::(next_token str (Str.match_end()))
+			else (Tok_Print)::(next_token str new_pos)
 		
-		(* ADD MORE TOKENS HERE *)
+		(* Tok_Main *)
+		else if (Str.string_match re_main str pos) 
+			then let token_key = Str.matched_string str in
+			let new_pos = Str.match_end() in
+			
+			if (Str.string_match re_extra str new_pos)
+				then let token_id = Str.matched_string str in
+				(Tok_ID (token_key^token_id))::(next_token str (Str.match_end()))
+			else (Tok_Main)::(next_token str new_pos)
 		
+		(* Tok_If *)
+		else if (Str.string_match re_if str pos) 
+			then let token_key = Str.matched_string str in
+			let new_pos = Str.match_end() in
+			
+			if (Str.string_match re_extra str new_pos)
+				then let token_id = Str.matched_string str in
+				(Tok_ID (token_key^token_id))::(next_token str (Str.match_end()))
+			else (Tok_If)::(next_token str new_pos)
+		
+		(* Tok_Else *)
+		else if (Str.string_match re_else str pos) 
+			then let token_key = Str.matched_string str in
+			let new_pos = Str.match_end() in
+			
+			if (Str.string_match re_extra str new_pos)
+				then let token_id = Str.matched_string str in
+				(Tok_ID (token_key^token_id))::(next_token str (Str.match_end()))
+			else (Tok_Else)::(next_token str new_pos)
+		
+		(* Tok_While *)
 		else if (Str.string_match re_while str pos) 
-			then (Tok_While)::(next_token str (Str.match_end()))
+			then let token_key = Str.matched_string str in
+			let new_pos = Str.match_end() in
+			
+			if (Str.string_match re_extra str new_pos)
+				then let token_id = Str.matched_string str in
+				(Tok_ID (token_key^token_id))::(next_token str (Str.match_end()))
+			else (Tok_While)::(next_token str new_pos)
 		
-		(* FINISH ADDING TOKENS HERE *)
-						
+		(* now process the urnary operators *)
+		
+		(* Tok_Plus *)
+		else if (Str.string_match re_plus str pos) 
+			then (Tok_Plus)::(next_token str (pos+1))
+			
+		(* Tok_Sub *)
+		else if (Str.string_match re_sub str pos) 
+			then (Tok_And)::(next_token str (pos+1))
+			
+		(* Tok_Mult *)
+		else if (Str.string_match re_and str pos) 
+			then (Tok_And)::(next_token str (pos+1))
+			
+		(* Tok_Div *)
+		else if (Str.string_match re_dev str pos) 
+			then (Tok_And)::(next_token str (pos+1))
+		
+		(* Tok_Pow *)
+		else if (Str.string_match re_pow str pos) 
+			then (Tok_And)::(next_token str (pos+1))
+		
+		(* finish by processing complex tokens *)
+		
+		(* Tok_Bool *)
+		else if (Str.string_match re_bool str pos)
+			then let token = Str.matched_string str in 
+			(Tok_Bool token)::(next_token str (Str.match_end()))
+		
+		(* Tok_Int *)						
 		else if (Str.string_match re_int str pos)
 			then let token = Str.matched_string str in 
 			(Tok_Int (int_of_string token))::(next_token str (Str.match_end()))
+			
+		(* Tok_ID *)					
+		(* id also checked after keywords too *)
+		else if (Str.string_match re_id str pos)
+			then let token = Str.matched_string str in 
+			(Tok_ID token)::(next_token str (Str.match_end()))
 		
-		else raise (InvalidInputException "Lex Error")
+		else 
+			raise (InvalidInputException "Lex Error")
 	in
 
 (* call next_token on the start position of input *)		
