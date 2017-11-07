@@ -88,9 +88,9 @@ and parse_urnary lst =
 and parse_primary lst = 
 		let (lst2, e1) = (parse_or lst) in
 		match lst2 with
-		| Tok_Int::t -> let (lst3, e2) = (parse_primary lst2) in (lst3, Tok_Int(e2))
-		| Tok_Bool::t -> let (lst3, e2) = (parse_primary lst2) in (lst3, Tok_Bool(e2))
-		| Tok_ID::t -> let (lst3, e2) = (parse_primary lst2) in (lst3, Tok_ID(e2))
+		| Tok_Int x::t -> let (lst3, e2) = (parse_primary lst2) in (lst3, Int x)
+		| Tok_Bool x::t -> let (lst3, e2) = (parse_primary lst2) in (lst3, Bool x)
+		| Tok_ID x::t -> let (lst3, e2) = (parse_primary lst2) in (lst3, Id "x")
 		| _ -> (lst2,e1)
 ;;
 
