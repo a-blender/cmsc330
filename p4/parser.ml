@@ -24,33 +24,6 @@ let lookahead tok_list = match tok_list with
 	| (h::t) -> h
 ;;
 
-
-
-(* parse_AndExpression function *)
-let parse_AndExpression lst = failwith "Unimplemented"
-
-(* parse_EqualityExpression function *)
-let parse_EqualityExpression lst = failwith "Unimplemented"
-
-(* parse_RelationalExpression function *)
-let parse_RelationalExpression = failwith "Unimplemented"
-
-(* parse_AdditiveExpression function *)
-let parse_AdditiveExpression = failwith "Unimplemented"
-
-(* parse_MultiplicativeExpression function *)
-let parse_MultiplicativeExpression = failwith "Unimplemented"
-
-(* parse_PowerExpression function *)
-let parse_PowerExpression = failwith "Unimplemented"
-
-(* parse_UnaryExpression function *)
-let parse_UnaryExpression = failwith "Unimplemented"
-
-(* parse_PrimaryExpression function *)
-let parse_PrimaryExpression = failwith "Unimplemented"
-	
-	
 (* parse_expr function *)
 (* returns a tuple of (list of remaining tokens, parsed expr) *)
 let rec parse_expr toks = 
@@ -74,26 +47,52 @@ and parse_equal lst =
 		let (lst2, e1) = (parse_relational lst) in
 		match lst2 with
 		| Tok_Equal::t -> let (lst3, e2) = (parse_equal lst2) in (lst3, Equal(e1,e2))
-		| Tok_NotEqual::t -> let (lst3, e2) = (parse_equal lst2) in (lst3, Equal(e1,e2))
+		| Tok_NotEqual::t -> let (lst3, e2) = (parse_equal lst2) in (lst3, NotEqual(e1,e2))
 		| _ -> (lst2, e1)
 
-and parse_relational lst =  
+and parse_relational lst = 
+		let (lst2, e1) = (parse_add lst) in
+		match lst2 with
+		| Tok_Less::t -> let (lst3, e2) = (parse_relational lst2) in (lst3, Less(e1,e2))
+		| Tok_Greater::t -> let (lst3, e2) = (parse_relational lst2) in (lst3, Greater(e1,e2))
+		| Tok_LessEqual::t -> let (lst3, e2) = (parse_relational lst2) in (lst3, LessEqual(e1,e2))
+		| Tok_GreaterEqual::t -> let (lst3, e2) = (parse_relational lst2) in (lst3, GreaterEqual(e1,e2))
+		| _ -> (lst2, e1) 
 
 and parse_add lst = 
+	let (lst2, e1) = (parse_mult lst) in
+		match lst2 with
+		| Tok_Plus::t -> let (lst3, e2) = (parse_add lst2) in (lst3, Plus(e1,e2))
+		| Tok_Sub::t -> let (lst3, e2) = (parse_add lst2) in (lst3, Sub(e1,e2))
+		| _ -> (lst2, e1) 
 
 and parse_mult lst = 
+	let (lst2, e1) = (parse_pow lst) in
+		match lst2 with
+		| Tok_Mult::t -> let (lst3, e2) = (parse_mult lst2) in (lst3, Mult(e1,e2))
+		| Tok_Div::t -> let (lst3, e2) = (parse_mult lst2) in (lst3, Div(e1,e2))
+		| _ -> (lst2, e1) 
 
 and parse_pow lst = 
+	let (lst2, e1) = (parse_urnary lst) in
+		match lst2 with
+		| Tok_Pow::t -> let (lst3, e2) = (parse_pow lst2) in (lst3, Pow(e1,e2))
+		| _ -> (lst2, e1)
 
 and parse_urnary lst = 
+	let (lst2, e1) = (parse_primary lst) in
+		match lst2 with
+		| Tok_Not::t -> let (lst3, e2) = (parse_urnary lst2) in (lst3, Not(e2))
+		| _ -> (lst2, e1)
 
 and parse_primary lst = 
-
+		let (lst2, e1) = (parse_or lst) in
+		match lst2 with
+		| Tok_Int::t -> let (lst3, e2) = (parse_primary lst2) in (lst3, Tok_Int(e2))
+		| Tok_Bool::t -> let (lst3, e2) = (parse_primary lst2) in (lst3, Tok_Bool(e2))
+		| Tok_ID::t -> let (lst3, e2) = (parse_primary lst2) in (lst3, Tok_ID(e2))
+		| _ -> (lst2,e1)
 ;;
-
-
-;;
-
 
 let rec parse_stmt toks = failwith "Unimplemented"
 
