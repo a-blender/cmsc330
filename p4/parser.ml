@@ -20,7 +20,7 @@ let match_token (toks : token list) (tok : token) : token list =
 (* lookahead function *)
 (* returns the head token or parse error for empty list *)
 let lookahead tok_list = match tok_list with
-	| [EOF] -> raise (ParseError "no tokens")
+	| [] -> raise (InvalidInputException "no tokens")
 	| (h::t) -> h
 ;;
 
@@ -64,11 +64,34 @@ and parse_or lst =
 		| _ -> (lst2, e1)
 
 (* parse_or function *)
-and parse_or lst = 
-		let (lst2, e1) = (parse_and lst) in
+and parse_and lst = 
+		let (lst2, e1) = (parse_equal lst) in
 		match lst2 with
-		| Tok_Or::t -> let (lst3, e2) = (parse_or lst2) in (lst3, Or(e1,e2))
+		| Tok_And::t -> let (lst3, e2) = (parse_and lst2) in (lst3, And(e1,e2))
 		| _ -> (lst2, e1)
+
+and parse_equal lst = 
+		let (lst2, e1) = (parse_relational lst) in
+		match lst2 with
+		| Tok_Equal::t -> let (lst3, e2) = (parse_equal lst2) in (lst3, Equal(e1,e2))
+		| Tok_NotEqual::t -> let (lst3, e2) = (parse_equal lst2) in (lst3, Equal(e1,e2))
+		| _ -> (lst2, e1)
+
+and parse_relational lst =  
+
+and parse_add lst = 
+
+and parse_mult lst = 
+
+and parse_pow lst = 
+
+and parse_urnary lst = 
+
+and parse_primary lst = 
+
+;;
+
+
 ;;
 
 
