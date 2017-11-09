@@ -121,7 +121,7 @@ let tokenize input =
 			else (Tok_Type_Int)::(next_token str new_pos)
 			
 		(* Tok_Type_Bool *)
-		else if (Str.string_match re_bool str pos) 
+		else if (Str.string_match re_type_bool str pos) 
 			then let token_key = Str.matched_string str in
 			let new_pos = Str.match_end() in
 			
@@ -191,11 +191,11 @@ let tokenize input =
 			then (Tok_And)::(next_token str (pos+1))
 			
 		(* Tok_Mult *)
-		else if (Str.string_match re_and str pos) 
+		else if (Str.string_match re_mult str pos) 
 			then (Tok_And)::(next_token str (pos+1))
 			
 		(* Tok_Div *)
-		else if (Str.string_match re_dev str pos) 
+		else if (Str.string_match re_div str pos) 
 			then (Tok_And)::(next_token str (pos+1))
 		
 		(* Tok_Pow *)
@@ -206,8 +206,8 @@ let tokenize input =
 		
 		(* Tok_Bool *)
 		else if (Str.string_match re_bool str pos)
-			then let token = Str.matched_string str in 
-			(Tok_Bool token)::(next_token str (Str.match_end()))
+			then let token = Str.matched_string str in
+			(Tok_Bool (bool_of_string token))::(next_token str (Str.match_end()))
 		
 		(* Tok_Int *)						
 		else if (Str.string_match re_int str pos)
@@ -220,6 +220,11 @@ let tokenize input =
 			then let token = Str.matched_string str in 
 			(Tok_ID token)::(next_token str (Str.match_end()))
 		
+
+		(* Whitespace, Tab, Newline check *)
+		else if (Str.string_match re_skip str pos)
+			then (next_token str (Str.match_end()))
+
 		else 
 			raise (InvalidInputException "Lex Error")
 	in

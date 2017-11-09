@@ -137,12 +137,37 @@ and parse_primary lst =
 let rec parse_stmt toks = 
 	let head = (lookahead toks) in
 	match head with
-	| Tok_Type_Int::t -> declareStatement toks
-	| Tok_Bool::t -> declareStatement toks
-	| Tok_Assign::t -> assignStatement toks
-	| Tok_Print::t -> printStatement toks
-	| Tok_If::t -> ifStatement toks
-	| Tok_While::t -> whileStatement toks
+
+	| Tok_Type_Int::t -> 
+		let (lst, dec) = (declareStatement toks) in
+		let (lst2, stmt) = (parse_stmt lst) in
+		(lst2, Seq(dec, stmt))
+
+	| Tok_Bool::t -> 
+		let (lst, bool) = (declareStatement toks) in
+		let (lst2, stmt) = (parse_stmt lst) in
+		(lst2, Seq(bool, stmt))
+
+	| Tok_Assign::t -> 
+		let (lst, ass) = (assignStatement toks) in
+		let (lst2, stmt) = (parse_stmt lst) in
+		(lst2, Seq(ass, stmt))
+
+	| Tok_Print::t -> 
+		let (lst, print) = (printStatement toks) in
+		let (lst2, stmt) = (parse_stmt lst) in
+		(lst2, Seq(print, stmt))
+
+	| Tok_If::t -> 
+		let (lst, if) = (ifStatement toks) in
+		let (lst2, stmt) = (parse_stmt lst) in
+		(lst2, Seq(if, stmt))
+
+	| Tok_While::t -> 
+		let (lst, while) = (whileStatement toks) in
+		let (lst2, stmt) = (parse_stmt lst) in
+		(lst2, Seq(while, stmt))
+
 	| NoOp -> (toks, NoOp)
 
 	
@@ -180,10 +205,10 @@ and printStatement lst = match lst with
 (* IfStatement *)	
 and ifStatement lst = match lst with
 			
-	| Tok_If::t -> let lst2 = (match_tokens lst Tok_If) in
+	| Tok_If::t -> let lst2 = (match_token lst Tok_If) in
 		(* if (expression) *)
-		let lst3 = (match_tokens lst2 Tok_LParen) in
-		let (lst4, exp) = (parse_expr lst3) in
+		let lst3 = (match_token lst2 Tok_LParen) in
+		let (lst4, if_exp) = (parse_expr lst3) in
 		let lst5 = (match_token lst4 Tok_RParen) in
 			
 		(* {statement} *)
@@ -193,19 +218,23 @@ and ifStatement lst = match lst with
 			
 		(* else or NoOp move *)
 		(match lst8 with
-		| Tok_Else::t -> let lst9 = (match_tokens lst8 Tok_LBrace) in
+		| Tok_Else::t -> let lst9 = (match_token lst8 Tok_LBrace) in
 			let (lst10, else_stmt) = (parse_stmt lst9) in
-			let lst11 = (match_tokens lst10 Tok_RBrace) in
-			(lst11, 
-		| _ ->    
+			let lst11 = (match_token lst10 Tok_RBrace) in
+			(lst11, If(if_exp, if_stmt, else_stmt))  
+		| _ -> (lst8, If(if_exp, if_stmt, NoOp)))    
 
-			
 	
 (* WhileStatement *)
 and whileStatement lst = match lst with		
 	
-	| Tok_While::t -> 
-		*)
+	| Tok_While::t -> let lst2 = (match_token lst Tok_While) in
+		let lst3 = (match_token lst2 Tok_LParen) in
+		let (lst4, exp) = (parse_expr lst3) in
+		let lst5 = (match_token lst4 Tok_RParen) in
+		let lst6 = (match_token lst5 Tok_LBrace) in
+		let (lst7, stmt) = (parse_stmt lst6) in
+		let lst8 = (match_token lst7 Tok_RBrace) in (lst8, While(exp, stmt))	
 ;;
 
 let parse_main toks = 
