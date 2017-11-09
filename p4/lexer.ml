@@ -192,7 +192,7 @@ let tokenize input =
 			
 		(* Tok_Mult *)
 		else if (Str.string_match re_mult str pos) 
-			then (Tok_And)::(next_token str (pos+1))
+			then (Tok_Mult)::(next_token str (pos+1))
 			
 		(* Tok_Div *)
 		else if (Str.string_match re_div str pos) 
