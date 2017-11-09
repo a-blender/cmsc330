@@ -1,5 +1,6 @@
 open SmallCTypes
 open Utils
+(* fix this shit *)
 
 type stmt_result = token list * stmt
 type expr_result = token list * expr
@@ -116,39 +117,39 @@ and parse_unary lst =
 and parse_primary lst = 
 	match lst with
 
-	| (Tok_Int (x))::t -> let lst2 = (match_token lst (Tok_Int x)) in
-		let (lst3, e2) = (parse_primary lst2) in (lst3, Int x)
+	| (Tok_Int(x))::t -> let lst2 = (match_token lst (Tok_Int(x))) in
+		(lst2, Int(x))
 
-	| (Tok_Bool x)::t -> let lst2 = (match_token lst (Tok_Bool x)) in
-		let (lst3, e2) = (parse_primary lst2) in (lst3, Bool x)
+	| (Tok_Bool(x))::t -> let lst2 = (match_token lst (Tok_Bool(x))) in
+		(lst2, Bool x)
 
-	| (Tok_ID (x))::t -> let lst2 = (match_token lst (Tok_ID x)) in
-		let (lst3, e2) = (parse_primary lst2) in (lst3, Id x)
+	| (Tok_ID(x))::t -> let lst2 = (match_token lst (Tok_ID(x))) in
+		(lst2, Id x)
 
 	| Tok_LParen::t -> let lst2 = (match_token lst Tok_LParen) in
-		let (lst3, e2) = (parse_expr lst2) in
+		(let (lst3, e2) = (parse_expr lst2) in
 		match lst3 with
 			| Tok_RParen::t -> (t, e2)
-			| _ -> raise (InvalidInputException("right paren not found"))
-	| _ -> raise (InvalidInputException("no base case in parse_expr"))
+			| _ -> raise (InvalidInputException("right paren not found")))
+	| _ -> let x = (List.hd lst) in
+		raise (InvalidInputException("x"))
 ;;
 
 (* parse_stmt function *)
 let rec parse_stmt toks = 
-	let head = (lookahead toks) in
-	match head with
+	match toks with
 
 	| Tok_Type_Int::t -> 
 		let (lst, dec) = (declareStatement toks) in
 		let (lst2, stmt) = (parse_stmt lst) in
 		(lst2, Seq(dec, stmt))
 
-	| Tok_Bool::t -> 
+	| Tok_Type_Bool::t -> 
 		let (lst, bool) = (declareStatement toks) in
 		let (lst2, stmt) = (parse_stmt lst) in
 		(lst2, Seq(bool, stmt))
 
-	| Tok_Assign::t -> 
+	| Tok_ID(x)::t -> 
 		let (lst, ass) = (assignStatement toks) in
 		let (lst2, stmt) = (parse_stmt lst) in
 		(lst2, Seq(ass, stmt))
@@ -159,47 +160,60 @@ let rec parse_stmt toks =
 		(lst2, Seq(print, stmt))
 
 	| Tok_If::t -> 
-		let (lst, if) = (ifStatement toks) in
+		let (lst, if_stmt) = (ifStatement toks) in
 		let (lst2, stmt) = (parse_stmt lst) in
-		(lst2, Seq(if, stmt))
+		(lst2, Seq(if_stmt, stmt))
 
 	| Tok_While::t -> 
-		let (lst, while) = (whileStatement toks) in
+		let (lst, while_stmt) = (whileStatement toks) in
 		let (lst2, stmt) = (parse_stmt lst) in
-		(lst2, Seq(while, stmt))
+		(lst2, Seq(while_stmt, stmt))
 
-	| NoOp -> (toks, NoOp)
+	| _ -> (toks, NoOp)
 
 	
 (* DeclareStatement *)
 and declareStatement lst = match lst with
  
-	| Tok_Type_Int::t -> let lst2 = (match_tokens lst Tok_Int) in
-		 	let x = (lookahead lst2) in
-			let lst3 = (match_token lst2 Tok_ID) in
-			(lst3, Declare(Type_Int, x))
+	| (Tok_Type_Int)::t -> let lst2 = (match_token lst Tok_Type_Int) in
+		(match lst2 with
+			| (Tok_ID(x))::t ->   
+				let lst3 = (match_token lst2 (Tok_ID(x))) in
+				let lst4 = (match_token lst3 Tok_Semi) in
+				(lst4, Declare(Type_Int, x))
+			| _ -> raise (InvalidInputException("declare error1")))
 	
-	| Tok_Type_Bool::t -> let lst2 = (match_tokens lst Tok_Bool) in
-			let x = (lookahead lst2) in
-			let lst3 = (match_token lst2 Tok_Bool) in
-			(lst3, Declare(Type_Bool, x))
+	| Tok_Type_Bool::t -> let lst2 = (match_token lst Tok_Type_Bool) in
+		(match lst2 with
+			| (Tok_ID(x))::t ->
+				let lst3 = (match_token lst2 (Tok_ID(x))) in
+				let lst4 = (match_token lst3 Tok_Semi) in
+				(lst4, Declare(Type_Bool, x))
+			| _ -> raise (InvalidInputException("declare error2")))
+	| _ -> raise (InvalidInputException("declare error3"))
 	
 
 (* AssignStatement *)
 and assignStatement lst = match lst with
 
-	| (Tok_ID x)::t -> let lst2 = (match_tokens lst Tok_ID) in
-			let lst3 = (match_tokens lst Tok_Assign) in
-			let (lst4, exp) = (parse_expr lst3) in (lst4, Assign(x, exp))
+	| (Tok_ID(x))::t -> let lst2 = (match_token lst (Tok_ID(x))) in
+			let lst3 = (match_token lst2 Tok_Assign) in
+			let (lst4, exp) = (parse_expr lst3) in 
+			let lst5 = (match_token lst4 Tok_Semi) in
+			(lst5, Assign(x, exp))
+	| _ -> raise (InvalidInputException("assign error"))
 
 		
 (* Print Statement *)
 and printStatement lst = match lst with
 		
-	| Tok_Print::t -> let lst2 = (match_tokens lst Tok_Print) in
-			let lst3 = (match_tokens lst2 Tok_LParen) in
+	| Tok_Print::t -> let lst2 = (match_token lst Tok_Print) in
+			let lst3 = (match_token lst2 Tok_LParen) in
 			let (lst4, exp) = (parse_expr lst3) in
-			let lst5 = (match_token lst4 Tok_RParen) in (lst5, Print(exp))
+			let lst5 = (match_token lst4 Tok_RParen) in 
+			let lst6 = (match_token lst5 Tok_Semi) in
+			(lst6, Print(exp))
+	| _ -> raise (InvalidInputException("print error"))
 
 	
 (* IfStatement *)	
@@ -218,11 +232,14 @@ and ifStatement lst = match lst with
 			
 		(* else or NoOp move *)
 		(match lst8 with
-		| Tok_Else::t -> let lst9 = (match_token lst8 Tok_LBrace) in
-			let (lst10, else_stmt) = (parse_stmt lst9) in
-			let lst11 = (match_token lst10 Tok_RBrace) in
-			(lst11, If(if_exp, if_stmt, else_stmt))  
-		| _ -> (lst8, If(if_exp, if_stmt, NoOp)))    
+		| Tok_Else::t -> let lst9 = (match_token lst8 Tok_Else) in
+			let lst10 = (match_token lst9 Tok_LBrace) in
+			let (lst11, else_stmt) = (parse_stmt lst10) in
+			let lst12 = (match_token lst11 Tok_RBrace) in
+			(lst12, If(if_exp, if_stmt, else_stmt))  
+		| _ -> (lst8, If(if_exp, if_stmt, NoOp)))
+	
+	| _ -> raise (InvalidInputException("if error"))    
 
 	
 (* WhileStatement *)
@@ -235,6 +252,7 @@ and whileStatement lst = match lst with
 		let lst6 = (match_token lst5 Tok_LBrace) in
 		let (lst7, stmt) = (parse_stmt lst6) in
 		let lst8 = (match_token lst7 Tok_RBrace) in (lst8, While(exp, stmt))	
+	| _ -> raise (InvalidInputException("while error"))
 ;;
 
 let parse_main toks = 
@@ -243,7 +261,7 @@ let parse_main toks =
 	let lst2 = (match_token lst1 Tok_LParen) in
 	let lst3 = (match_token lst2 Tok_RParen) in 
 	let lst4 = (match_token lst3 Tok_LBrace) in 
-	let (lst4, stmt) = parse_stmt lst4 in
+	let (lst4, stmt) = (parse_stmt lst4) in
 	
 	let lst5 = (match_token lst4 Tok_RBrace) in
 	let lst6 = (match_token lst5 EOF) in stmt 
