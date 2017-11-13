@@ -109,23 +109,67 @@ let rec eval_expr env e = match e with
 		| Val_Bool x -> (Val_Bool (!x))
 		| Val_Int x -> raise (TypeError("not (func) int found")))
 
-	
-	| Greater
+
+	| Greater (e1,e2) -> let num1 = (eval_expr env e1) in
+		let num2 = (eval_expr env e2) in
+		(match num1 with
+		| Val_Int x -> (match num2 with
+			| Val_Int y -> (Val_Bool (x>y))
+			| Val_Bool y -> raise (TypeError("greater2 bool found")))
+		| Val_Bool x -> raise (TypeError("greater1 bool found")))
 
 
-	| Less
+	| Less (e1,e2) -> let num1 = (eval_expr env e1) in
+		let num2 = (eval_expr env e2) in
+		(match num1 with
+		| Val_Int x -> (match num2 with
+			| Val_Int y -> (Val_Bool (x<y))
+			| Val_Bool y -> raise (TypeError("less2 bool found")))
+		| Val_Bool x -> raise (TypeError("less1 bool found")))
 
 
-	| GreaterEqual
+	| GreaterEqual (e1,e2) -> let num1 = (eval_expr env e1) in
+		let num2 = (eval_expr env e2) in
+		(match num1 with
+		| Val_Int x -> (match num2 with
+			| Val_Int y -> (Val_Bool (x>=y))
+			| Val_Bool y -> raise (TypeError("greaterEqual2 bool found")))
+		| Val_Bool x -> raise (TypeError("greaterEqual1 bool found")))
 
 
-	| LessEqual
+	| LessEqual (e1,e2) -> let num1 = (eval_expr env e1) in
+		let num2 = (eval_expr env e2) in
+		(match num1 with
+		| Val_Int x -> (match num2 with
+			| Val_Int y -> (Val_Bool (x<=y))
+			| Val_Bool y -> raise (TypeError("lessEqual2 bool found")))
+		| Val_Bool x -> raise (TypeError("lessEqual1 bool found")))
 
 
-	| Equal
+	| Equal (e1,e2) -> let exp1 = (eval_expr env e1) in
+		let exp2 = (eval_expr env e2) in
+		(match exp1 with
+		
+		| Val_Int x -> (match exp2 with
+			| Val_Int y -> (Val_Bool (x=y))
+			| Val_Bool y -> raise (TypeError("equal1 invalid exp found")))
+				
+		| Val_Bool x ->	(match exp2 with
+			| Val_Bool y -> (Val_Bool (x=y))
+			| Val_Int y -> raise (TypeError("equal2 invalid exp found"))))
 
 
-	| Not Equal
+	| NotEqual (e1,e2) -> let exp1 = (eval_expr env e1) in
+		let exp2 = (eval_expr env e2) in
+		(match exp1 with
+		
+		| Val_Int x -> (match exp2 with
+			| Val_Int y -> (Val_Bool (x!=y))
+			| Val_Bool y -> raise (TypeError("notEqual1 invalid exp found")))
+				
+		| Val_Bool x ->	(match exp2 with
+			| Val_Bool y -> (Val_Bool (x!=y))
+			| Val_Int y -> raise (TypeError("notEqual2 invalid exp found"))))
 
 
 	| _ -> raise (TypeError("no valid expression found")) 
