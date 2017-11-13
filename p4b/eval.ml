@@ -106,7 +106,7 @@ let rec eval_expr env e = match e with
 	
 	| Not exp -> let bool = (eval_expr env exp) in
 		(match bool with
-		| Val_Bool x -> (Val_Bool (!x))
+		| Val_Bool x -> (Val_Bool (not x))
 		| Val_Int x -> raise (TypeError("not (func) int found")))
 
 
@@ -170,9 +170,6 @@ let rec eval_expr env e = match e with
 		| Val_Bool x ->	(match exp2 with
 			| Val_Bool y -> (Val_Bool (x!=y))
 			| Val_Int y -> raise (TypeError("notEqual2 invalid exp found"))))
-
-
-	| _ -> raise (TypeError("no valid expression found")) 
 ;;
 
 (* eval_stmt function *)
