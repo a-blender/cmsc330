@@ -173,8 +173,50 @@ let rec eval_expr env e = match e with
 ;;
 
 (* eval_stmt function *)
-let rec eval_stmt env s = failwith "unimplemented"
+let rec eval_stmt env s = match s with
+	
+	
+	| NoOp -> env
 
 
+	| Seq (s1,s2) -> let env1 = (eval_stmt env s1) in
+		let env2 = (eval_stmt env1 s2) in env2
+
+
+	| Declare (t,id) -> if ((search env id)=true)  
+		then raise (DeclarationError("eval_stmt declare, id exists"))
+		else (match t with
+			| Type_Int -> (extend env id (Val_Int(0)))
+			| Type_Bool -> (extend env id (Val_Bool(false))))  
+		
+
+	| Assign (id,exp) -> if (search env id)=false 
+		then raise (DeclarationError("eval_stmt assign, id not found"))
+		else (let id_type = (lookup env id) in
+			let exp_type = (eval_expr env exp) in
+			(match id_type with
+
+			| Val_Int x -> (match exp_type with
+				| Val_Int y -> (extend env id exp_type)
+				| Val_Bool y -> raise (TypeError("eval_stmt assign1, invalid match found"))) 
+
+			| Val_Bool x -> (match exp_type with
+				| Val_Bool y -> (extend env id exp_type)
+				| Val_Int y -> raise (TypeError("eval_stmt assign2,invalid match found")))))
+
+
+	| If (exp,s1,s2) -> let e2 = (eval_expr env exp) in
+		(match e2 with
+			| Val_Bool x -> let e3 = (if x=true 
+				then (eval_stmt env s1)
+				else (eval_stmt env s2)) in e3 	
+			| Val_Int x -> raise (TypeError("if evals to bool")))
+
+
+	| While (exp,s) -> raise (TypeError("smallC found a WHILE statement"))
+
+
+	| Print (exp) -> raise (TypeError("smallC found a PRINT statement"))
+;;	
 
 
