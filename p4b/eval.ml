@@ -213,10 +213,21 @@ let rec eval_stmt env s = match s with
 			| Val_Int x -> raise (TypeError("if evals to bool")))
 
 
-	| While (exp,s) -> raise (TypeError("smallC found a WHILE statement"))
+	| While (exp,s) -> let e2 = (eval_expr env exp) in
+		(match e2 with
+			| Val_Bool x -> (match x with
+				| true -> (eval_stmt (eval_stmt env s) s)
+				| false -> env)
+			| Val_Int x -> raise (TypeError("invalid while"))) 
 
 
-	| Print (exp) -> raise (TypeError("smallC found a PRINT statement"))
+	| Print (exp) -> let e1 = (eval_expr env exp) in
+		(match e1 with
+		| Val_Int x -> 
+			(print_output_int x);(print_output_newline());env
+		| Val_Bool x -> 
+			(print_output_bool x);(print_output_newline());env)
+ 
 ;;	
 
 
