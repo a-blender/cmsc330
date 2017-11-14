@@ -216,8 +216,8 @@ let rec eval_stmt env s = match s with
 	| While (exp,s) -> let e2 = (eval_expr env exp) in
 		(match e2 with
 			| Val_Bool x -> (match x with
-				| true -> (eval_stmt (eval_stmt env s) s)
-				| false -> env)
+			| true -> (eval_stmt (eval_stmt env s) (While(exp,s)))
+			| false -> env)
 			| Val_Int x -> raise (TypeError("invalid while"))) 
 
 
