@@ -52,7 +52,8 @@ flat([H|T],Flatlist) :-
 % Usage: If List is a list, then nodups(List,Unique) succeeds with one solution for Unique.
 
 nodups(List,Unique) :-
-    fail.
+	list_to_set(List,Unique),
+	!.
 
 % Predicate: powerset(Set,Sub)
 % Description: Sub is an element of the powerset of Set
@@ -61,5 +62,12 @@ nodups(List,Unique) :-
 % Notes: The powerset of a set S is the set of all subsets of S.
 % Hints: Give a recursive definition of the powerset operation. In the recursive case, you must make one binary choice.
 
-powerset(Set,Sub) :-
-    fail.
+powerset([],[]).
+
+powerset([H|T],Sub) :-
+	powerset(T,Sub).
+
+powerset([H|T],[H|Sub]) :-
+	powerset(T,Sub).
+
+
