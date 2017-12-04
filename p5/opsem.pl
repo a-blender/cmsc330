@@ -183,5 +183,33 @@ eval_expr(Env,mult(E1,E2),Value) :-
 % Assumptions: Stmt is well-typed with respect to every variable in Env.
 % Usage: If Stmt is well-typed with respect to every variable in Env, then eval_stmt(Env,Stmt,NewEnv) succeeds with one solution for NewEnv.
 
-eval_stmt(Env,Stmt,NewEnv) :-
-    fail.
+eval_stmt(Env,skip,Env).
+
+eval_stmt(Env,seq(S1,S2),NewEnv) :-
+	eval_stmt(Env,S1,Env2),
+	eval_stmt(Env2,S2,NewEnv).
+
+eval_stmt(Env,decl(int,X),[X-0|Env]).
+eval_stmt(Env,decl(bool,X),[X-false|Env]).
+
+eval_stmt(Env,assign(X,E),[X-Value|Env]) :-
+	eval_expr(Env,E,Value).
+
+% while
+eval_stmt(Env,while(G,_),Env) :-
+	eval_expr(Env,G,false).
+
+eval_stmt(Env,while(G,B),NewEnv) :-
+	eval_expr(Env,G,true),
+	eval_stmt(Env,B,Env2),
+	eval_stmt(Env2,while(G,B),NewEnv).
+
+% condition
+eval_stmt(Env,cond(G,T,E),NewEnv) :-
+	eval_expr(Env,G,false),
+	eval_stmt(Env,E,NewEnv).	
+
+eval_stmt(Env,cond(G,T,E),NewEnv) :-
+	eval_expr(Env,G,true),
+	eval_stmt(Env,T,NewEnv).
+    

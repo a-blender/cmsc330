@@ -46,21 +46,36 @@ final(nfa(_,_,_,_,Finals),I) :-
 % Usage: If M is an NFA, then move(M,From,A,To) succeeds with all solutions for From, A and To.
 
 move(M,From,A,To) :-
-    fail.
+	delta(M,From,A,To),
+	A \== epsilon.
 
 % Predicate: e_closure(M,From,To)
 % Description: To is an element of the epsilon-closure of From.
 % Usage: If M is an NFA, then e_closure(M,From,To) succeeds with all solutions for From and To.
 
+e_closure(M,From,From,_) :- 
+	state(M,From).
+
 e_closure(M,From,To) :-
-    fail.
+	e_closure(M,From,To,[]).
+
+e_closure(M,From,To,VS) :-
+	\+ member(From,VS),
+	delta(M,From,epsilon,T),
+	e_closure(M,T,To,[From|VS]).	
 
 % Predicate: accept(M,String)
 % Description: String is accepted by M.
 % Usage: If M is an NFA and String a string, then accept(M,String) succeeds if M accepts String.
 
-accept(M,String) :-
-    fail.
+% not working
+accept(M,[]) :- false.
+accept(M,[H|T]) :-
+	accept(M,T),
+	start(M,Start),
+	delta(Start,H,End).
+	
+	
 
 % Predicate: productive(M,State)
 % Description: There is a final state reachable from State in M.
