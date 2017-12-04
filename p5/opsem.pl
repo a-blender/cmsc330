@@ -130,8 +130,53 @@ typecheck_stmt(Env1,cond(G,T,E),Env3) :-
 % Assumptions: Expr is well-typed with respect to every variable in Env.
 % Usage: If Expr is well-typed with respect to every variable in Env, then eval_expr(Env,Expr,Value) succeeds with one solution for Value.
 
-eval_expr(Env,Expr,Value) :-
-    fail.
+eval_expr(Env,int(N),N).
+
+eval_expr(Env,bool(B),B).
+
+eval_expr(Env,id(X),Value) :-
+	lookup(Env,X,Value).
+
+eval_expr(Env,not(E),false) :-
+	eval_expr(Env,E,true).
+eval_expr(Env,not(E),true) :-
+	eval_expr(Env,E,false).
+
+eval_expr(Env,eq(E1,E2),true) :-
+	eval_expr(Env,E1,V1),
+	eval_expr(Env,E2,V2),
+	V1 = V2, !.
+eval_expr(_,eq(_,_),false).
+
+eval_expr(Env,lt(E1,E2),true) :-
+	eval_expr(Env,E1,V1),
+	eval_expr(Env,E2,V2),
+	V1 < V2, !.
+eval_expr(_,lt(_,_), false). 
+
+eval_expr(Env,or(E1,E2),true) :-
+	eval_expr(Env,E1,V1),
+	V1 == true.
+
+eval_expr(Env,or(E1,E2),true) :-
+	eval_expr(Env,E2,V2),
+	V2 == true.
+
+eval_expr(Env,or(E1,E2),false) :-
+	eval_expr(Env,E1,V1),
+	eval_expr(Env,E2,V2),
+	V1 == false,
+	V2 == false.
+
+eval_expr(Env,plus(E1,E2),Value) :-
+	eval_expr(Env,E1,V1),
+	eval_expr(Env,E2,V2),
+	Value is V1+V2, !.
+
+eval_expr(Env,mult(E1,E2),Value) :-
+	eval_expr(Env,E1,V1),
+	eval_expr(Env,E2,V2),
+	Value is V1*V2, !.
 
 % Predicate: eval_stmt(+Env,+Stmt,-NewEnv) is det
 % Description: NewEnv is the result of evaluating Stmt in environment Env
