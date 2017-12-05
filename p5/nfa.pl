@@ -85,8 +85,24 @@ accept(M,String) :-
 % Description: There is a final state reachable from State in M.
 % Usage: If M is an NFA, then productive(M,State) succeeds with all solutions for State.
 
+productive(M,State,VS) :-
+	\+ member(State,VS),
+	final(M,State).
+
+productive(M,State,VS) :-
+	\+ member(State,VS),
+	move(M,State,A,X),
+	A \== epsilon,
+	productive(M,X,[State|VS]).
+	
+
+productive(M,State,VS) :-
+	\+ member(State,VS),
+	e_closure(M,State,S2),
+	productive(M,S2,[State|VS]).
+
 productive(M,State) :-
-    fail.
+	productive(M,State,[]).
 
 % Predicate: enumerate(M,Len,String)
 % Description: String is a string of length Len accepted by the NFA.
