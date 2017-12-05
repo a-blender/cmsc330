@@ -210,6 +210,6 @@ eval_stmt(Env,cond(G,_,E),NewEnv) :-
 	eval_stmt(Env,E,NewEnv).	
 
 eval_stmt(Env,cond(G,T,_),NewEnv) :-
-	eval_expr(Env,G,true),
+	eval_expr(Env,G,true), 
 	eval_stmt(Env,T,NewEnv).
     
