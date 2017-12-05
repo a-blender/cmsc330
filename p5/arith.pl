@@ -21,10 +21,13 @@ factor(N,F) :-
 % Notes: Use the Euclidean algorithm to compute gcd(A,B,D).
 % Usage: If A and B are nonnegative integers, then gcd(A,B,D) succeeds with one solution for D.
 
+gcd(0,0,0).
+
 gcd(A,0,A) :- !. 
 
 gcd(A,B,D) :- 
-	A >= B, 
+	A >= B,
+	B > 0, 
 	X is A mod B, 
 	gcd(B,X,D).
 
