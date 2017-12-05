@@ -64,7 +64,7 @@ nodups(List,Unique) :-
 
 powerset([],[]).
 
-powerset([H|T],Sub) :-
+powerset([_|T],Sub) :-
 	powerset(T,Sub).
 
 powerset([H|T],[H|Sub]) :-

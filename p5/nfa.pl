@@ -56,26 +56,30 @@ move(M,From,A,To) :-
 e_closure(M,From,From,_) :- 
 	state(M,From).
 
-e_closure(M,From,To) :-
-	e_closure(M,From,To,[]).
-
 e_closure(M,From,To,VS) :-
 	\+ member(From,VS),
 	delta(M,From,epsilon,T),
 	e_closure(M,T,To,[From|VS]).	
 
+e_closure(M,From,To) :-
+	e_closure(M,From,To,[]).
+
 % Predicate: accept(M,String)
 % Description: String is accepted by M.
 % Usage: If M is an NFA and String a string, then accept(M,String) succeeds if M accepts String.
 
-% not working
-accept(M,[]) :- false.
-accept(M,[H|T]) :-
-	accept(M,T),
+accept(M,[],CurrNode) :-
+	final(M,CurrNode).
+
+accept(M,[H|T],CurrNode) :-
+	move(M,CurrNode,H,Next),
+	e_closure(M,Next,N2),	
+	accept(M,T,N2).
+
+accept(M,String) :-
 	start(M,Start),
-	delta(Start,H,End).
-	
-	
+	e_closure(M,Start,X),
+	accept(M,String,X).
 
 % Predicate: productive(M,State)
 % Description: There is a final state reachable from State in M.
@@ -89,4 +93,6 @@ productive(M,State) :-
 % Usage: If M is an NFA, then enumerate(M,Len,String) succeeds with all solutions for Len and String.
 
 enumerate(M,Len,String) :-
-    fail.
+	length(String,Len),
+	accept(M,String).
+

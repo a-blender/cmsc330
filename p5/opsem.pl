@@ -130,9 +130,9 @@ typecheck_stmt(Env1,cond(G,T,E),Env3) :-
 % Assumptions: Expr is well-typed with respect to every variable in Env.
 % Usage: If Expr is well-typed with respect to every variable in Env, then eval_expr(Env,Expr,Value) succeeds with one solution for Value.
 
-eval_expr(Env,int(N),N).
+eval_expr(_,int(N),N).
 
-eval_expr(Env,bool(B),B).
+eval_expr(_,bool(B),B).
 
 eval_expr(Env,id(X),Value) :-
 	lookup(Env,X,Value).
@@ -154,11 +154,11 @@ eval_expr(Env,lt(E1,E2),true) :-
 	V1 < V2, !.
 eval_expr(_,lt(_,_), false). 
 
-eval_expr(Env,or(E1,E2),true) :-
+eval_expr(Env,or(E1,_),true) :-
 	eval_expr(Env,E1,V1),
 	V1 == true.
 
-eval_expr(Env,or(E1,E2),true) :-
+eval_expr(Env,or(_,E2),true) :-
 	eval_expr(Env,E2,V2),
 	V2 == true.
 
@@ -205,11 +205,11 @@ eval_stmt(Env,while(G,B),NewEnv) :-
 	eval_stmt(Env2,while(G,B),NewEnv).
 
 % condition
-eval_stmt(Env,cond(G,T,E),NewEnv) :-
+eval_stmt(Env,cond(G,_,E),NewEnv) :-
 	eval_expr(Env,G,false),
 	eval_stmt(Env,E,NewEnv).	
 
-eval_stmt(Env,cond(G,T,E),NewEnv) :-
+eval_stmt(Env,cond(G,T,_),NewEnv) :-
 	eval_expr(Env,G,true),
 	eval_stmt(Env,T,NewEnv).
     

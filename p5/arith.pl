@@ -21,7 +21,6 @@ factor(N,F) :-
 % Notes: Use the Euclidean algorithm to compute gcd(A,B,D).
 % Usage: If A and B are nonnegative integers, then gcd(A,B,D) succeeds with one solution for D.
 
-
 gcd(A,0,A) :- !. 
 
 gcd(A,B,D) :- 
@@ -61,5 +60,16 @@ prime(N) :-
 % Usage: If N is a positive integer, then partition(N,Part) succeeds with all solutions for Part.
 % Hints: Compare your solution against OEIS A000586 for a quick sanity check.
 
+partition(0,[]).
+
 partition(N,Part) :-
-    fail.
+	between(1,N,X), prime(X),
+	List = [X|T], Next is N-X,
+	partition(Next,T), msort(List,NewList), 
+	Part = NewList, is_set(Part).
+	 
+	
+	
+		
+
+	 
