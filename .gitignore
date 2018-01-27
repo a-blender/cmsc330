@@ -1,7 +1,15 @@
+# ignore basic extensions
 *.submit
 *submit.jar
 *submit.rb
-p1/image-resources/*
-p1/inputs/*
 
+# ignore zip package scripts
+pack_submission.sh
 
+# ignore some project6 folders
+*.db
+*.lock
+*.komodoproject
+Gemfile
+public/
+views/
